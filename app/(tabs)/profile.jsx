@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons/faRightFromBracket";
 import { router } from "expo-router";
 
-
 const menuItems = [
   { key: 'home', label: 'Home', icon: icons.premium },
   { key: 'contact', label: 'Contact Us', icon: icons.contact },
@@ -36,7 +35,7 @@ const Profile = () => {
   );
 
   const renderHeader = () => (
-    <View className="flex flex-row items-center p-5 pt-10 mx-7 mt-12" >
+    <View className="flex flex-row items-center p-5 pt-10 mx-7 mt-12">
       <View className="mr-5 w-16 h-16 border border-secondary rounded-lg flex justify-center items-center">
         <Image
           source={{ uri: user?.avatar }}
@@ -45,7 +44,7 @@ const Profile = () => {
         />
       </View>
       <View>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 5, marginTop: 7 }}>{user?.username}</Text>
+        <Text style={{ fontSize: 18, color: 'black', fontWeight: 'bold', marginBottom: 5, marginTop: 7 }}>{user?.username}</Text>
         <Text style={{ fontSize: 16, color: 'gray', marginBottom: 8 }}>{user?.email}</Text>
       </View>
     </View>
@@ -63,7 +62,6 @@ const Profile = () => {
             <Text className="text-danger text-lg font-psemibold mx-2">Logout</Text>
             <FontAwesomeIcon icon={faRightFromBracket} color={'#FF204E'} />
           </TouchableOpacity>
-
         )}
       />
     </SafeAreaView>
@@ -71,4 +69,3 @@ const Profile = () => {
 };
 
 export default Profile;
-

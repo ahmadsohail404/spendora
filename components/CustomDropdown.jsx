@@ -45,6 +45,7 @@ const CustomDropdowm = ({ data }) => {
         onFocus={() => setIsFocus(true)}
         onBlur={() => setIsFocus(false)}
         onChange={item => {
+          console.log("Dropdown item selected:", item);
           setValue(item.value);
           setSelectedGroupDropDown(item)
           setIsFocus(false);

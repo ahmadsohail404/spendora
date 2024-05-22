@@ -19,6 +19,7 @@ import useAppwrite from "../../lib/useAppwrite";
 import { createGroup, addGroupMember, getGroups, getGroupMembers, updateGroup, deleteGroup, deleteGroupMember } from "../../lib/appwrite";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
+import EmptyState from "../../components/EmptyState";
 
 
 const Group = () => {
@@ -232,23 +233,24 @@ const Group = () => {
         data={groups}
         keyExtractor={item => item.$id}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => handlePressGroup(item)} className="flex flex-row justify-between items-center bg-gray-100 mx-7 my-3 p-2 px-3 rounded">
+          <TouchableOpacity onPress={() => handlePressGroup(item)} className="flex flex-row justify-between items-center bg-secondary-100 mx-7 my-3 p-2 px-3 rounded">
             <TouchableOpacity className="mx-5 my-3 px-3 rounded" >
               <Text className="font-pmedium text-xl text-black-00" style={styles.groupName}>{item.groupName}</Text>
             </TouchableOpacity>
             <TouchableOpacity className="mx-8" onPress={() => handleDeleteGroup(item.$id)}>
-              <FontAwesomeIcon icon={faTrash} size={20} color="red" />
+              <FontAwesomeIcon icon={faTrash} size={20} color="white" />
             </TouchableOpacity>
           </TouchableOpacity>
         )}
         ListHeaderComponent={
           <View className="flex flex-row items-center justify-between m-7 mb-10">
             <Text className="text-2xl font-psemibold text-white">Groups</Text>
-            <CustomButton
-              title="Create a group"
-              handlePress={() => setModalVisible(true)}
-              containerStyles="min-h-[40px] px-2 text-sm"
-            />
+            <TouchableOpacity
+              onPress={() => setModalVisible(true)}
+              className="min-h-[40px] px-2"
+            >
+              <Text className="text-sm underline font-pmedium text-secondary-100 mt-2">Create a group</Text>
+            </TouchableOpacity>
             <Modal
               animationType="slide"
               transparent={true}
@@ -294,7 +296,7 @@ const Group = () => {
                         placeholder="Enter email"
                         keyboardType="email-address"
                       />
-                      <TouchableOpacity onPress={handleAddMember} activeOpacity={0.7} className="flex flex-row justify-center items-center border border-secondary mt-4 mb-5 rounded-xl min-h-[32px]">
+                      <TouchableOpacity onPress={handleAddMember} activeOpacity={0.7} className="flex flex-row justify-center items-center border border-secondary mt-4 mb-2 rounded-xl min-h-[32px]">
                         <Text className="text-secondary text-lg font-psemibold mx-2">Add</Text>
                         <FontAwesomeIcon icon={faPlus} color="#FF9C01" />
                       </TouchableOpacity>
@@ -317,7 +319,7 @@ const Group = () => {
                         </View>
                       ))
                     ) : (
-                      <Text style={{ color: 'gray', textAlign: 'center' }}>Add Members</Text>
+                      <Text style={{ color: 'gray', textAlign: 'center' }}>No Member Added</Text>
                     )}
 
                   </ScrollView>
@@ -332,6 +334,12 @@ const Group = () => {
             </Modal>
           </View>
         }
+        ListEmptyComponent={() => (
+          <EmptyState
+            title="No Group Found"
+            subtitle="Be the first to create a group"
+          />
+        )}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

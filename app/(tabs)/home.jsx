@@ -24,11 +24,11 @@ import { CustomButton } from "../../components";
 import { Redirect, router } from "expo-router";
 
 const Home = () => {
-  const { data: friendsList, refetch } = useAppwrite(getFriends);
-  const { data: groups, refetch: refetchGroups } = useAppwrite(getGroups);
-  const { data: addedMembers, refetch: refetchMembers } = useAppwrite(getGroupMembers);
-
   const { user, setModalVisible } = useGlobalContext();
+  const { data: friendsList, refetch } = useAppwrite(getFriends);
+  const { data: groups, refetch: refetchGroups } = useAppwrite(() => getGroups(user.$id));
+  const { data: addedMembers, refetch: refetchMembers } = useAppwrite(() => getGroupMembers(), []);
+
 
   const [refreshing, setRefreshing] = useState(false);
 
