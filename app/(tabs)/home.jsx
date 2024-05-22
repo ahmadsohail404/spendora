@@ -100,20 +100,26 @@ const Home = () => {
           >
             <FontAwesomeIcon icon={faPlus} color={"#21232b"} size={48} />
           </TouchableOpacity>
-          {groups.map((group, index) => (
-            <TouchableOpacity
-              key={group.$id}
-              className="bg-secondary m-2 rounded-lg flex items-center justify-center h-[75px] w-[75px] "
-              style={{
-                aspectRatio: 1,
-              }}
-              onPress={() => router.push("/groups")}
-            >
-              <Text className="text-black-300 text-sm font-semibold">
-                {group.groupName}
-              </Text>
-            </TouchableOpacity>
-          ))}
+
+          {groups.length > 0 ? (
+            groups.map((group, index) => (
+              <TouchableOpacity
+                key={group.$id}
+                className="bg-secondary m-2 rounded-lg flex items-center justify-center h-[75px] w-[75px]"
+                style={{
+                  aspectRatio: 1,
+                }}
+                onPress={() => router.push("/groups")}
+              >
+                <Text className="text-black-300 text-sm font-semibold">
+                  {group.groupName}
+                </Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={{ color: 'black', textAlign: 'center' }}>No group found</Text>
+          )}
+
         </ScrollView>
 
         <ScrollView

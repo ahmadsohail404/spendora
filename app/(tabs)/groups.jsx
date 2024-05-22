@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -29,42 +29,43 @@ const Group = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [isUpdateGroup, setUpdateGroup] = useState(false)
 
+  const { data: groups, refetch: refetchGroups } = useAppwrite(() => getGroups(user.$id), []);
 
-  // Fetching all groups
-  const { data: groups, refetch: refetchGroups } = useAppwrite(getGroups);
-
-  // Fetching members of the selected group
-  const { data: groupMembers, refetch: refetchMembers } = useAppwrite(() => getGroupMembers(selectedGroup?.$id));
+  const { data: groupMembers, loading, refetch: refetchMembers } = useAppwrite(
+    () => getGroupMembers(selectedGroup?.$id),
+    [selectedGroup?.$id]
+  );
 
   const [isSubmitting, setSubmitting] = useState(false)
 
   const [form, setForm] = useState({
     groupName: "",
-    memberPhone: "",
+    memberEmail: "",
     memberName: "",
     members: [],
   });
 
+
   const handlePressGroup = async (group) => {
     setSelectedGroup(group);
     setModalVisible(true);
-    setUpdateGroup(true)
+    setUpdateGroup(true);
 
     try {
       const members = await getGroupMembers(group.$id);
       setForm({
         groupName: group.groupName,
-        memberPhone: '',
+        memberEmail: '',
         memberName: '',
         members: members.map(member => ({
-          phone: member.phone,
+          email: member.email,
           name: member.name
         }))
       });
     } catch (error) {
       console.error("Failed to fetch group members:", error);
       Alert.alert("Error", "Failed to fetch group members: " + error.message);
-      setUpdateGroup(false)
+      setUpdateGroup(false);
     }
   };
 
@@ -83,34 +84,32 @@ const Group = () => {
 
 
   const handleAddMember = () => {
-    if (form.memberPhone && form.memberName) {
+    if (form.memberEmail && form.memberName) {
+      console.log(form.memberEmail, form.memberName);
       setForm(prevForm => ({
         ...prevForm,
         members: [
           ...prevForm.members,
           {
-            phone: form.memberPhone,
+            email: form.memberEmail,
             name: form.memberName,
             isNew: true
           }
         ],
-        memberPhone: '',
+        memberEmail: '',
         memberName: '',
       }));
     }
   };
 
-
   const handleDeleteGroup = async (groupId) => {
     try {
       await deleteGroup(groupId);
       console.log("Group deleted successfully");
-      setForm(prevForm => ({
-        ...prevForm,
-        groups: prevForm.groups.filter(group => group.$id !== groupId)
-      }));
       setSelectedGroup(null);
+      await refetchGroups();
       setModalVisible(false);
+      Alert.alert("Success", "Group deleted successfully");
     } catch (error) {
       console.error("Failed to delete group:", error);
       Alert.alert("Error", "Failed to delete group");
@@ -131,6 +130,12 @@ const Group = () => {
       Alert.alert("Error", "Failed to delete member");
     }
   }
+  const handleLocalDelete = async (index) => {
+    console.log("Attempting to locally delete member with index:", index);
+    if (form.members > -1 && index < form.members.length) {
+      form.members.splice(index, 1);
+    }
+  }
 
 
   const handleSubmit = async () => {
@@ -143,7 +148,6 @@ const Group = () => {
     try {
       let newGroup;
       if (selectedGroup) {
-        // Assuming an updateGroup function exists
         newGroup = await updateGroup(selectedGroup.$id, form.groupName);
         console.log("Group updated successfully");
         Alert.alert("Success", "Group updated successfully");
@@ -157,12 +161,12 @@ const Group = () => {
       const memberPromises = form.members.map(member => {
         if (member.isNew) {
           // New member needs to be added
-          return addGroupMember(newGroup.$id, user.$id, member.phone, member.name);
+          return addGroupMember(newGroup.$id, user.$id, member.email, member.name);
         }
       });
       await Promise.all(memberPromises);
 
-      setForm({ groupName: "", members: [], memberPhone: "", memberName: "" });
+      setForm({ groupName: "", members: [], memberEmail: "", memberName: "" });
       setModalVisible(false);
       setSelectedGroup(null);
       refetchGroups();
@@ -174,128 +178,167 @@ const Group = () => {
     }
   };
 
+  const handleClose = () => {
+    setModalVisible(false);
+    setUpdateGroup(false)
+    setSelectedGroup(null);
+    setForm({
+      groupName: "",
+      memberEmail: "",
+      memberName: "",
+      members: [],
+    });
+  }
+
+  useEffect(() => {
+    async function fetchGroupMembers() {
+      if (!selectedGroup) {
+        return;
+      }
+
+      try {
+        const members = await getGroupMembers(selectedGroup.$id);
+        setForm(prevForm => ({
+          ...prevForm,
+          groupName: selectedGroup.groupName,
+          members: members.map(member => ({
+            email: member.email,
+            name: member.name
+          }))
+        }));
+      } catch (error) {
+        console.error("Failed to fetch group members:", error);
+        Alert.alert("Error", "Failed to fetch group members: " + error.message);
+      }
+    }
+
+    fetchGroupMembers();
+
+    return () => {
+      setForm({
+        groupName: "",
+        memberEmail: "",
+        memberName: "",
+        members: []
+      });
+    };
+  }, [selectedGroup]);
+
+
 
   return (
-    <SafeAreaView className="bg-primary h-full" refreshControl={
-      <RefreshControl
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-      />
-    }>
-      <View className="flex flex-col">
-        <View className="flex flex-row items-center justify-between m-7 mb-10">
-          <Text className="text-2xl font-psemibold text-white">Groups</Text>
-          <CustomButton
-            title="Create a group"
-            handlePress={() => setModalVisible(true)}
-            containerStyles="min-h-[40px] px-2 text-sm"
-            isLoading={isSubmitting}
-          />
-          <Modal
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-              />
-            }
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={() => {
-              Alert.alert('Modal has been closed.');
-              setModalVisible(!modalVisible);
-            }}>
-            <View style={styles.centeredView}>
-              <View style={styles.modalView} className="bg-gray-100">
-                <ScrollView
-                  style={{ width: '100%', padding: 20 }}
-                  contentContainerStyle={{
-                    flexGrow: 1,
-                    justifyContent: 'center',
-                    paddingBottom: 20,
-                  }}>
-                  <View className="flex flex-row items-center justify-between" >
+    <SafeAreaView className="bg-primary h-full">
+      <FlatList
+        data={groups}
+        keyExtractor={item => item.$id}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => handlePressGroup(item)} className="flex flex-row justify-between items-center bg-gray-100 mx-7 my-3 p-2 px-3 rounded">
+            <TouchableOpacity className="mx-5 my-3 px-3 rounded" >
+              <Text className="font-pmedium text-xl text-black-00" style={styles.groupName}>{item.groupName}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="mx-8" onPress={() => handleDeleteGroup(item.$id)}>
+              <FontAwesomeIcon icon={faTrash} size={20} color="red" />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+        ListHeaderComponent={
+          <View className="flex flex-row items-center justify-between m-7 mb-10">
+            <Text className="text-2xl font-psemibold text-white">Groups</Text>
+            <CustomButton
+              title="Create a group"
+              handlePress={() => setModalVisible(true)}
+              containerStyles="min-h-[40px] px-2 text-sm"
+            />
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => {
+                Alert.alert('Modal has been closed.');
+                setModalVisible(!modalVisible);
+              }}>
+              <View style={styles.centeredView}>
+                <View style={styles.modalView} className="bg-gray-100">
+                  <ScrollView
+                    style={{ width: '100%', padding: 20 }}
+                    contentContainerStyle={{
+                      flexGrow: 1,
+                      justifyContent: 'center',
+                      paddingBottom: 20,
+                    }}>
+                    <View className="flex flex-row items-center justify-between" >
 
-                    <Text className="text-2xl font-psemibold text-black">{isUpdateGroup ? "Update group" : "Create a group"}</Text>
-                    <Pressable onPress={() => setModalVisible(false)}>
-                      <FontAwesomeIcon icon={faCircleXmark} size={28} color="#FF204E" />
-                    </Pressable>
-                  </View>
-                  <FormField
-                    label="Group Name"
-                    value={form.groupName}
-                    onChangeText={(text) => setForm({ ...form, groupName: text })}
-                    placeholder="Enter group name"
+                      <Text className="text-2xl font-psemibold text-black">{isUpdateGroup ? "Update group" : "Create a group"}</Text>
+                      <Pressable onPress={handleClose}>
+                        <FontAwesomeIcon icon={faCircleXmark} size={28} color="#FF204E" />
+                      </Pressable>
+                    </View>
+                    <FormField
+                      label="Group Name"
+                      value={form.groupName}
+                      onChangeText={(text) => setForm({ ...form, groupName: text })}
+                      placeholder="Enter group name"
+                    />
+                    <Text className="text-xl font-pmedium text-black mt-7">Add Members</Text>
+                    <View className="pb-4">
+                      <FormField
+                        label="Name"
+                        value={form.memberName}
+                        onChangeText={(text) => setForm({ ...form, memberName: text })}
+                        placeholder="Enter name"
+                      />
+                      <FormField
+                        label="Email"
+                        value={form.memberEmail}
+                        onChangeText={(text) => setForm({ ...form, memberEmail: text })}
+                        placeholder="Enter email"
+                        keyboardType="email-address"
+                      />
+                      <TouchableOpacity onPress={handleAddMember} activeOpacity={0.7} className="flex flex-row justify-center items-center border border-secondary mt-4 mb-5 rounded-xl min-h-[32px]">
+                        <Text className="text-secondary text-lg font-psemibold mx-2">Add</Text>
+                        <FontAwesomeIcon icon={faPlus} color="#FF9C01" />
+                      </TouchableOpacity>
+                    </View>
+                    {form.members.length > 0 ? (
+                      form.members.map((member, index) => (
+                        <View
+                          className="border border-secondary rounded-xl px-2"
+                          key={index}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 5,
+                          }}
+                        >
+                          <Text style={{ flex: 1, padding: 10, color: "#000000" }}>{member.name} - {member.email}</Text>
+                          <TouchableOpacity onPress={() => handleDeleteMember(index, member.$id || null)}>
+                            <FontAwesomeIcon icon={faTrash} size={20} color="red" />
+                          </TouchableOpacity>
+                        </View>
+                      ))
+                    ) : (
+                      <Text style={{ color: 'gray', textAlign: 'center' }}>Add Members</Text>
+                    )}
+
+                  </ScrollView>
+                  <CustomButton
+                    title={isUpdateGroup ? "Update Group" : "Create Group"}
+                    handlePress={handleSubmit}
+                    containerStyles="mt-7 min-h-[45px] px-[70px]"
+                    isLoading={isSubmitting}
                   />
-                  <Text className="text-xl font-pmedium text-black mt-7">Add Members</Text>
-                  <View className="pb-4">
-                    <FormField
-                      label="Name"
-                      value={form.memberName}
-                      onChangeText={(text) => setForm({ ...form, memberName: text })}
-                      placeholder="Enter name"
-                    />
-                    <FormField
-                      label="Phone"
-                      value={form.memberPhone}
-                      onChangeText={(text) => setForm({ ...form, memberPhone: text })}
-                      placeholder="Enter phone"
-                      keyboardType="phone-pad"
-                    />
-                    <TouchableOpacity onPress={handleAddMember} activeOpacity={0.7} className="flex flex-row justify-center items-center border border-secondary mt-4 mb-5 rounded-xl min-h-[32px]">
-                      <Text className="text-secondary text-lg font-psemibold mx-2">Add</Text>
-                      <FontAwesomeIcon icon={faPlus} color="#FF9C01" />
-                    </TouchableOpacity>
-                  </View>
-                  {groupMembers && groupMembers.length > 0 ? (
-                    groupMembers.map((member, index) => (
-                      <View
-                        className="border border-secondary rounded-xl px-2"
-                        key={member.$id || index}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          marginBottom: 5,
-                        }}
-                      >
-                        <Text style={{ flex: 1, padding: 10, color: "#000000" }}>{member.name} - {member.phone}</Text>
-                        <TouchableOpacity onPress={() => handleDeleteMember(index, member.$id)}>
-                          <FontAwesomeIcon icon={faTrash} size={20} color="red" />
-                        </TouchableOpacity>
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={{ color: 'black', textAlign: 'center', marginTop: 20 }}>No members found</Text>
-                  )}
-                </ScrollView>
-                <CustomButton
-                  title={isUpdateGroup ? "Update Group" : "Create Group"}
-                  handlePress={handleSubmit}
-                  containerStyles="mt-7 min-h-[45px] px-[70px]"
-                  isLoading={isSubmitting}
-                />
+                </View>
               </View>
-            </View>
-          </Modal>
-        </View>
-        <View>
-          <FlatList
-            data={groups}
-            keyExtractor={item => item.$id}
-            renderItem={({ item }) => (
-              <TouchableOpacity className="bg-gray-100 mx-6 my-3 p-2 px-3 rounded" onPress={() => handlePressGroup(item)}>
-                <Text className="font-pmedium text-xl text-black-00" style={styles.groupName}>{item.groupName}</Text>
-              </TouchableOpacity>
-            )}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-              />
-            }
+            </Modal>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
           />
-        </View>
-      </View>
+        }
+      />
     </SafeAreaView>
   );
 };
