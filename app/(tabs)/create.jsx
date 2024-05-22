@@ -31,27 +31,27 @@ const Create = () => {
   });
 
   const { data: groups, refetch: refetchGroups } = useAppwrite(getGroups);
-  const { data: groupMembers, refetch: refetchMembers } = useAppwrite(() => getGroupMembers(selectedGroupDropDown));
+  // const { data: groupMembers, refetch: refetchMembers } = useAppwrite(() => getGroupMembers(selectedGroupDropDown));
 
-  useEffect(() => {
-    if (groups) {
-      const formattedData = groups.map(group => ({
-        label: group.groupName,
-        value: group.$id,
-      }));
-      setData(formattedData);
-    }
-  }, [groups]);
+  // useEffect(() => {
+  //   if (groups) {
+  //     const formattedData = groups.map(group => ({
+  //       label: group.groupName,
+  //       value: group.$id,
+  //     }));
+  //     setData(formattedData);
+  //   }
+  // }, [groups]);
 
-  useEffect(() => {
-    if (selectedGroupDropDown) {
-      refetchMembers();
-    }
-  }, [selectedGroupDropDown]);
+  // useEffect(() => {
+  //   if (selectedGroupDropDown) {
+  //     refetchMembers();
+  //   }
+  // }, [selectedGroupDropDown]);
 
-  useEffect(() => {
-    console.log("Group Members:", groupMembers);
-  }, [groupMembers]);
+  // useEffect(() => {
+  //   console.log("Group Members:", groupMembers);
+  // }, [groupMembers]);
 
   const handleAddMember = () => {
     if (form.memberPhone && form.memberName) {

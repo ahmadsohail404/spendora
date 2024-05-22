@@ -15,8 +15,6 @@ const GlobalProvider = ({ children }) => {
   const [value, setValue] = useState(null);
   const [selectedGroupDropDown, setSelectedGroupDropDown] = useState(null);
 
-
-
   useEffect(() => {
     getCurrentUser()
       .then((res) => {

@@ -45,7 +45,7 @@ const Group = () => {
     members: [],
   });
 
-  const handleSelectGroup = async (group) => {
+  const handlePressGroup = async (group) => {
     setSelectedGroup(group);
     setModalVisible(true);
     setUpdateGroup(true)
@@ -67,7 +67,6 @@ const Group = () => {
       setUpdateGroup(false)
     }
   };
-
 
 
   const onRefresh = async () => {
@@ -193,6 +192,12 @@ const Group = () => {
             isLoading={isSubmitting}
           />
           <Modal
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
             animationType="slide"
             transparent={true}
             visible={modalVisible}
@@ -242,22 +247,26 @@ const Group = () => {
                       <FontAwesomeIcon icon={faPlus} color="#FF9C01" />
                     </TouchableOpacity>
                   </View>
-                  {groupMembers.map((member, index) => (
-                    <View
-                      className="border border-secondary rounded-xl px-2"
-                      key={member.$id || index}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        marginBottom: 5,
-                      }}
-                    >
-                      <Text style={{ flex: 1, padding: 10, color: "#000000" }}>{member.name} - {member.phone}</Text>
-                      <TouchableOpacity onPress={() => handleDeleteMember(index, member.$id)}>
-                        <FontAwesomeIcon icon={faTrash} size={20} color="red" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                  {groupMembers && groupMembers.length > 0 ? (
+                    groupMembers.map((member, index) => (
+                      <View
+                        className="border border-secondary rounded-xl px-2"
+                        key={member.$id || index}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginBottom: 5,
+                        }}
+                      >
+                        <Text style={{ flex: 1, padding: 10, color: "#000000" }}>{member.name} - {member.phone}</Text>
+                        <TouchableOpacity onPress={() => handleDeleteMember(index, member.$id)}>
+                          <FontAwesomeIcon icon={faTrash} size={20} color="red" />
+                        </TouchableOpacity>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={{ color: 'black', textAlign: 'center', marginTop: 20 }}>No members found</Text>
+                  )}
                 </ScrollView>
                 <CustomButton
                   title={isUpdateGroup ? "Update Group" : "Create Group"}
@@ -274,7 +283,7 @@ const Group = () => {
             data={groups}
             keyExtractor={item => item.$id}
             renderItem={({ item }) => (
-              <TouchableOpacity className="bg-gray-100 mx-6 my-3 p-2 px-3 rounded" onPress={() => handleSelectGroup(item)}>
+              <TouchableOpacity className="bg-gray-100 mx-6 my-3 p-2 px-3 rounded" onPress={() => handlePressGroup(item)}>
                 <Text className="font-pmedium text-xl text-black-00" style={styles.groupName}>{item.groupName}</Text>
               </TouchableOpacity>
             )}
