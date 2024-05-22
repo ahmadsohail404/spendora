@@ -11,6 +11,11 @@ const GlobalProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [getMoney, setGetMoney] = useState(200)
   const [payMoney, setPayMoney] = useState(100)
+  const [modalVisible, setModalVisible] = useState(false);
+  const [value, setValue] = useState(null);
+  const [selectedGroupDropDown, setSelectedGroupDropDown] = useState(null);
+
+
 
   useEffect(() => {
     getCurrentUser()
@@ -31,7 +36,7 @@ const GlobalProvider = ({ children }) => {
       });
   }, []);
 
-  const value = {
+  const contextValue = {
     isLogged,
     setIsLogged,
     user,
@@ -40,12 +45,18 @@ const GlobalProvider = ({ children }) => {
     getMoney,
     setGetMoney,
     payMoney,
-    setPayMoney
+    setPayMoney,
+    modalVisible,
+    setModalVisible,
+    value,
+    setValue,
+    selectedGroupDropDown, 
+    setSelectedGroupDropDown
   }
 
   return (
     <GlobalContext.Provider
-      value={value}
+      value={contextValue}
     >
       {children}
     </GlobalContext.Provider>

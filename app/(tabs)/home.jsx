@@ -12,7 +12,7 @@ import {
 
 import { images } from "../../constants";
 import useAppwrite from "../../lib/useAppwrite";
-import { getCurrentUser, getFriends } from "../../lib/appwrite";
+import { getCurrentUser, getFriends, getGroups, getGroupMembers } from "../../lib/appwrite";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import CustomCard from "../../components/CustomCard";
 
@@ -25,15 +25,15 @@ import { Redirect, router } from "expo-router";
 
 const Home = () => {
   const { data: friendsList, refetch } = useAppwrite(getFriends);
-  const { user } = useGlobalContext();
+  const { data: groups, refetch: refetchGroups } = useAppwrite(getGroups);
+  const { data: addedMembers, refetch: refetchMembers } = useAppwrite(getGroupMembers);
+
+  const { user, setModalVisible } = useGlobalContext();
 
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // console.log("====================================");
-    // console.log(friendsList[0].name);
-    // console.log("====================================");
     await refetch();
     setRefreshing(false);
   };
@@ -46,13 +46,10 @@ const Home = () => {
     { name: "F 5" },
   ];
 
-  const groups = [
-    { name: "G 1" },
-    { name: "G 2" },
-    { name: "G 3" },
-    { name: "G 4" },
-    { name: "G 5" },
-  ];
+  const handleCreateGroup = () => {
+    router.push("/groups")
+    setModalVisible(true)
+  }
 
   return (
     <SafeAreaView className="bg-primary h-full">
@@ -99,20 +96,21 @@ const Home = () => {
           </Text>
           <TouchableOpacity
             className="m-2"
-            onPress={() => console.log("Create Group")}
+            onPress={handleCreateGroup}
           >
             <FontAwesomeIcon icon={faPlus} color={"#21232b"} size={48} />
           </TouchableOpacity>
           {groups.map((group, index) => (
             <TouchableOpacity
-              key={index}
+              key={group.$id}
               className="bg-secondary m-2 rounded-lg flex items-center justify-center h-[75px] w-[75px] "
               style={{
                 aspectRatio: 1,
               }}
+              onPress={() => router.push("/groups")}
             >
-              <Text className="text-black-300 text-lg font-semibold">
-                {group.name}
+              <Text className="text-black-300 text-sm font-semibold">
+                {group.groupName}
               </Text>
             </TouchableOpacity>
           ))}

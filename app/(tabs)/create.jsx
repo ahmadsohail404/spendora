@@ -1,98 +1,109 @@
-import { useState } from "react";
-import { router } from "expo-router";
-import { ResizeMode, Video } from "expo-av";
-import * as DocumentPicker from "expo-document-picker";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useContext, useState, useEffect } from "react";
 import {
+  ScrollView,
   View,
   Text,
-  Alert,
-  Image,
+  TextInput,
   TouchableOpacity,
-  ScrollView,
+  Alert,
 } from "react-native";
-
-import { icons } from "../../constants";
-import { createVideoPost } from "../../lib/appwrite";
-import { CustomButton, FormField } from "../../components";
+import CustomButton from "../../components/CustomButton";
+import FormField from "../../components/FormField";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faPlus, faTrash, faUserGroup } from "@fortawesome/free-solid-svg-icons";
+import { createGroup, addGroupMember, getGroups, getGroupMembers } from "../../lib/appwrite";
+import useAppwrite from "../../lib/useAppwrite";
 import { useGlobalContext } from "../../context/GlobalProvider";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CustomDropdown from "../../components/CustomDropdown";
 
 const Create = () => {
-  const { user } = useGlobalContext();
-  const [uploading, setUploading] = useState(false);
+  const { user, setModalVisible, selectedGroupDropDown, setSelectedGroupDropDown } = useGlobalContext();
+
+  const [data, setData] = useState([]);
+  const [memberData, setMemberData] = useState([]);
   const [form, setForm] = useState({
-    title: "",
-    video: null,
-    thumbnail: null,
-    prompt: "",
+    groupName: "",
+    memberPhone: "",
+    memberName: "",
+    members: [],
   });
 
-  const openPicker = async (selectType) => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type:
-        selectType === "image"
-          ? ["image/png", "image/jpg"]
-          : ["video/mp4", "video/gif"],
-    });
+  const { data: groups, refetch: refetchGroups } = useAppwrite(getGroups);
+  const { data: groupMembers, refetch: refetchMembers } = useAppwrite(() => getGroupMembers(selectedGroupDropDown));
 
-    if (!result.canceled) {
-      if (selectType === "image") {
-        setForm({
-          ...form,
-          thumbnail: result.assets[0],
-        });
-      }
+  useEffect(() => {
+    if (groups) {
+      const formattedData = groups.map(group => ({
+        label: group.groupName,
+        value: group.$id,
+      }));
+      setData(formattedData);
+    }
+  }, [groups]);
 
-      if (selectType === "video") {
-        setForm({
-          ...form,
-          video: result.assets[0],
-        });
-      }
-    } else {
-      setTimeout(() => {
-        Alert.alert("Document picked", JSON.stringify(result, null, 2));
-      }, 100);
+  useEffect(() => {
+    if (selectedGroupDropDown) {
+      refetchMembers();
+    }
+  }, [selectedGroupDropDown]);
+
+  useEffect(() => {
+    console.log("Group Members:", groupMembers);
+  }, [groupMembers]);
+
+  const handleAddMember = () => {
+    if (form.memberPhone && form.memberName) {
+      setForm((prevForm) => ({
+        ...prevForm,
+        members: [
+          ...prevForm.members,
+          { phone: form.memberPhone, name: form.memberName },
+        ],
+        memberPhone: "",
+        memberName: "",
+      }));
     }
   };
 
-  const submit = async () => {
-    if (
-      (form.prompt === "") |
-      (form.title === "") |
-      !form.thumbnail |
-      !form.video
-    ) {
-      return Alert.alert("Please provide all fields");
-    }
+  const handleSubmit = async () => {
+    console.log("Group Name:", form.groupName);
 
-    setUploading(true);
     try {
-      await createVideoPost({
-        ...form,
-        userId: user.$id,
-      });
+      const newGroup = await createGroup(form.groupName, user.$id);
+      console.log("New Group:", newGroup); // Log the new group
+      for (let member of form.members) {
+        await addGroupMember(newGroup.$id, user.$id, member.phone, member.name);
+      }
 
-      Alert.alert("Success", "Post uploaded successfully");
-      router.push("/home");
+      console.log("Group created with members added successfully");
+      setForm({ groupName: "", members: [], memberPhone: "", memberName: "" });
+      router.push("/create");
     } catch (error) {
-      Alert.alert("Error", error.message);
-    } finally {
-      setForm({
-        title: "",
-        video: null,
-        thumbnail: null,
-        prompt: "",
-      });
-
-      setUploading(false);
+      console.error("Error creating group or adding members:", error.message);
     }
   };
 
   return (
     <SafeAreaView className="bg-primary h-full">
-      <ScrollView className="px-4 my-6">
-        <Text className="text-2xl text-white font-psemibold">Create Expense</Text>
+      <ScrollView>
+        <View className="p-2">
+          <CustomDropdown
+            data={data}
+          />
+        </View>
+        <View className="flex flex-col items-center">
+          <Text className="text-xl font-psemibold text-secondary">OR</Text>
+          <CustomButton
+            title="Create a group"
+            handlePress={() => {
+              router.push("/groups")
+              setModalVisible(true)
+            }}
+            containerStyles="mt-5 px-[95px]"
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

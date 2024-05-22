@@ -64,6 +64,22 @@ const TabLayout = () => {
         />
 
         <Tabs.Screen
+          name="groups"
+          options={{
+            title: "Groups",
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.group}
+                color={color}
+                name="Groups"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
           name="create"
           options={{
             title: "Create",
@@ -73,22 +89,6 @@ const TabLayout = () => {
                 icon={icons.plus}
                 color={color}
                 name="Create"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-
-        <Tabs.Screen
-          name="bills"
-          options={{
-            title: "Bills",
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.bookmark}
-                color={color}
-                name="Bills"
                 focused={focused}
               />
             ),
