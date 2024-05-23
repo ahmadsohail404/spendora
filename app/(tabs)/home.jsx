@@ -12,7 +12,7 @@ import {
 
 import { images } from "../../constants";
 import useAppwrite from "../../lib/useAppwrite";
-import { getCurrentUser, getFriends, getGroups, getGroupMembers } from "../../lib/appwrite";
+import { getCurrentUser, getAllExpenses, getFriends, getGroups, getGroupMembers } from "../../lib/appwrite";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import CustomCard from "../../components/CustomCard";
 
@@ -31,10 +31,14 @@ const Home = () => {
 
 
   const [refreshing, setRefreshing] = useState(false);
+  const { data: expenses, refetch: refetchExpenses } = useAppwrite(() => getAllExpenses(user.$id));
+
 
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
+    await refetchMembers()
+    await refetchExpenses()
     setRefreshing(false);
   };
 
@@ -75,15 +79,14 @@ const Home = () => {
 
       <CustomCard />
 
-      <ScrollView className="h-full mt-2 p-3 rounded-tl-[225px] rounded-tr-[225px] bg-gray-100"
+      <ScrollView className="h-full mt-2 p-3 bg-gray-100"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-
         <ScrollView
           horizontal
-          className="bg-gray-100 h-[120px] rounded-xl p-3 mt-14"
+          className="bg-black-300 h-[120px] rounded-xl p-3 mb-5 mt-7"
           contentContainerStyle={{
             display: "flex",
             justifyContent: "center",
@@ -91,8 +94,8 @@ const Home = () => {
             height: "100%",
           }}
         >
-          <Text className="font-psemibold  text-black-300">
-            Groups <FontAwesomeIcon icon={faChevronRight} color={"black"} />
+          <Text className="font-psemibold  text-gray-100">
+            Groups <FontAwesomeIcon icon={faChevronRight} color={"white"} />
           </Text>
           <TouchableOpacity
             className="m-2"
@@ -117,7 +120,7 @@ const Home = () => {
               </TouchableOpacity>
             ))
           ) : (
-            <Text style={{ color: 'black', textAlign: 'center' }}>No group found</Text>
+              <Text className="font-psemibold text-sm text-gray-100">No group found</Text>
           )}
 
         </ScrollView>
@@ -132,23 +135,31 @@ const Home = () => {
             height: "100%",
           }}
         >
-          <Text className="font-psemibold  text-gray-100">
-            Recent Friends{" "}
+          <Text className="font-psemibold text-gray-100">
+            Recent Expenses{" "}
             <FontAwesomeIcon icon={faChevronRight} color={"white"} />
           </Text>
-          {friends.map((friend, index) => (
-            <TouchableOpacity
-              key={index}
-              className="bg-secondary m-2 rounded-lg flex items-center justify-center h-[75px] w-[75px] "
-              style={{
-                aspectRatio: 1,
-              }}
-            >
-              <Text className="text-black-300 text-lg font-semibold">
-                {friend.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {expenses.length > 0 ? (
+            expenses.map((expense, index) => (
+              <TouchableOpacity
+                key={index}
+                className="bg-secondary m-2 rounded-lg flex items-center justify-center h-[75px] w-[75px] "
+                style={{
+                  aspectRatio: 1,
+                }}
+              >
+                <Text className="text-black-300 text-sm font-semibold">
+                  {expense.description}
+                </Text>
+                <Text className="text-black-300 text-sm font-semibold">
+                  ₹{expense.amount}
+                </Text>
+              </TouchableOpacity>
+            ))
+          ):(
+            <Text className="font-psemibold text-sm ml-4 text-gray-100">No expense found</Text>
+          )}
+          
         </ScrollView>
 
         <CustomButton

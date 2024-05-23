@@ -297,7 +297,8 @@ const Group = () => {
                         keyboardType="email-address"
                       />
                       <TouchableOpacity onPress={handleAddMember} activeOpacity={0.7} className="flex flex-row justify-center items-center border border-secondary mt-4 mb-2 rounded-xl min-h-[32px]">
-                        <Text className="text-secondary text-lg font-psemibold mx-2">Add</Text>
+
+                        <Text className="text-secondary text-lg font-psemibold mx-2">{isUpdateGroup ? ("Add More") : ("Add")}</Text>
                         <FontAwesomeIcon icon={faPlus} color="#FF9C01" />
                       </TouchableOpacity>
                     </View>
