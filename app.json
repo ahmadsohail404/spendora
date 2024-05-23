@@ -12,17 +12,21 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "package": "com.sohail.aora"
+      "package": "com.sohail.aora",
+      "bundleIdentifier": "com.ahmadsohail.spendora"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff",
         "package": "com.sohail.aora"
-      }
+      },
+      "package": "com.ahmadsohail.spendora"
     },
     "web": {
       "bundler": "metro",
@@ -30,9 +34,19 @@
       "favicon": "./assets/favicon.png",
       "package": "com.sohail.aora"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "f8515368-aa73-4565-a3af-d79413a29e54"
+      }
     }
   }
 }

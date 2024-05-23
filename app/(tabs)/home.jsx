@@ -44,7 +44,7 @@ const Home = () => {
       let amountToGet = 0;
 
       expenses.forEach(expense => {
-        if (expense.payer === user.$id) {
+        if (expense.payer === user?.$id) {
           totalPaid += parseFloat(expense.amount);
 
           if (expense.splitBetween) {
@@ -74,12 +74,13 @@ const Home = () => {
     if (expenses.length > 0) {
       calculateFinancials();
     }
-  }, [expenses, user.$id]);
+  }, [expenses, user?.$id]);
 
 
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await refetch();
     await refetchGroups();
     await refetchMembers();
     await refetchExpenses();
