@@ -1,12 +1,12 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faMoneyCheckDollar } from '@fortawesome/free-solid-svg-icons/faMoneyCheckDollar'
-import { useGlobalContext } from '../context/GlobalProvider'
 
-const CustomCard = () => {
-  const { getMoney, payMoney } = useGlobalContext()
+const CustomCard = ({ totalPaid, willGet }) => {
 
-  const total = getMoney - payMoney
+  const willPay = 0
+
+  const total = willGet - willPay
 
   return (
     <View className="bg-secondary rounded-xl m-4 p-4 flex-row justify-between items-center">
@@ -14,13 +14,13 @@ const CustomCard = () => {
         <View className="mb-7">
           <Text className="text-black-300 font-pmedium text-lg">
             Total Balance: {" "}
-            <Text className={total > 0 ? "text-green-600" : "text-red-500"} >₹ {total}</Text>
+            <Text className={totalPaid > 0 ? "text-green-600" : "text-red-500"} >₹ {totalPaid}</Text>
           </Text>
         </View>
         <View className="flex-row justify-between">
           <View>
             <Text className="text-green-600 font-pmedium">
-              ₹ 200
+              ₹ {willGet}
             </Text>
             <Text className="text-black-300 font-pmedium">
               will get
@@ -28,7 +28,7 @@ const CustomCard = () => {
           </View>
           <View>
             <Text className="text-red-500 font-pmedium">
-              ₹ 100
+              ₹ {willPay}
             </Text>
             <Text className="text-black-300 font-pmedium">
               will pay

@@ -54,13 +54,27 @@ const Group = () => {
 
     try {
       const members = await getGroupMembers(group.$id);
+      // Check if the current user is already a member
+      const isCurrentUserMember = members.some(member => member.userId === user.$id);
+
+      // Include current user if not already a member
+      const membersWithCurrentUser = isCurrentUserMember ? members : [
+        ...members,
+        {
+          email: user.email,
+          name: user.username,
+          userId: user.$id
+        }
+      ];
+
       setForm({
         groupName: group.groupName,
         memberEmail: '',
         memberName: '',
-        members: members.map(member => ({
+        members: membersWithCurrentUser.map(member => ({
           email: member.email,
-          name: member.name
+          name: member.name,
+          userId: member.userId
         }))
       });
     } catch (error) {
@@ -69,6 +83,7 @@ const Group = () => {
       setUpdateGroup(false);
     }
   };
+
 
 
   const onRefresh = async () => {
@@ -83,25 +98,43 @@ const Group = () => {
     }
   };
 
-
   const handleAddMember = () => {
     if (form.memberEmail && form.memberName) {
-      console.log(form.memberEmail, form.memberName);
-      setForm(prevForm => ({
-        ...prevForm,
-        members: [
-          ...prevForm.members,
-          {
-            email: form.memberEmail,
-            name: form.memberName,
+      setForm(prevForm => {
+        // Check if the current user is already added to prevent duplication
+        const isCurrentUserAdded = prevForm.members.some(member => member.userId === user.$id);
+
+        // Prepare the new member data
+        const newMember = {
+          email: form.memberEmail,
+          name: form.memberName,
+          isNew: true
+        };
+
+        // Update the form state with the new member
+        let updatedMembers = [...prevForm.members, newMember];
+
+        // Add the current user only if they haven't been added yet and it's not an update operation
+        if (!isCurrentUserAdded && !isUpdateGroup) {
+          updatedMembers.push({
+            email: user.email,
+            name: user.username,
+            userId: user.$id,
             isNew: true
-          }
-        ],
-        memberEmail: '',
-        memberName: '',
-      }));
+          });
+        }
+
+        return {
+          ...prevForm,
+          members: updatedMembers,
+          memberEmail: '',
+          memberName: '',
+        };
+      });
     }
   };
+
+
 
   const handleDeleteGroup = async (groupId) => {
     try {
@@ -131,13 +164,6 @@ const Group = () => {
       Alert.alert("Error", "Failed to delete member");
     }
   }
-  const handleLocalDelete = async (index) => {
-    console.log("Attempting to locally delete member with index:", index);
-    if (form.members > -1 && index < form.members.length) {
-      form.members.splice(index, 1);
-    }
-  }
-
 
   const handleSubmit = async () => {
     if (!form.groupName.trim()) {
@@ -246,7 +272,7 @@ const Group = () => {
           <View className="flex flex-row items-center justify-between m-7 mb-10">
             <Text className="text-2xl font-psemibold text-white">Groups</Text>
             <TouchableOpacity
-              onPress={() => setModalVisible(true)}
+              onPress={() => { setModalVisible(true); console.log("user", user); }}
               className="min-h-[40px] px-2"
             >
               <Text className="text-sm underline font-pmedium text-secondary-100 mt-2">Create a group</Text>
